@@ -1,0 +1,14 @@
+{
+	"title"		:	"Throne Ridge Event Viewer",
+	"type"		:	"addon",
+	"tags"		:	[""],
+	"ignore"	:
+	[
+		"*.psd",
+		"*.vcproj",
+		"*.svn*",
+		"*.git*",
+		"*.md*"
+		"*.hg*"
+	]
+}
