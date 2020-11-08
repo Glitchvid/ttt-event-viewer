@@ -70,7 +70,6 @@ function TREventViewer.ProcessEvents.LoadDamageLog( path, onlymeta )
 	
 	local dlogstr = util.Decompress( dlogbin )
 	local dlog = util.JSONToTable( dlogstr )
-	local readhash = util.CRC(dlogbin)
 
 	if not dlog then
 		PrintDebugNotify( "FAILURE: Cannot import log data!" )
