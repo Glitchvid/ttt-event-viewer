@@ -164,7 +164,7 @@ function TREventViewer.Strings.GenerateAlertString( entry )
 		end
 	end
 
-	if entry.vicrole == "traitor" and entry.attrole == "traitor"then
+	if entry.vicrole == "traitor" and entry.attrole == "traitor" then
 		return "FF"
 	end
 
