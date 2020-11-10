@@ -15,7 +15,7 @@ local PrintDebugNotify = TREventViewer.PrintDebugNotify
 
 local function ProcessMetaData( logfile )
 	-- Read the metadata first.
-	local meta = util.JSONToTable( logfile:ReadLine() ) 
+	local meta = util.JSONToTable( logfile:ReadLine() )
 	if not meta then
 		PrintDebugNotify( "FAILURE: Cannot import metadata!" )
 		logfile:Close()
@@ -67,7 +67,7 @@ function TREventViewer.ProcessEvents.LoadDamageLog( path, onlymeta )
 		PrintDebugNotify( "-", "Expected: '" .. tostring(meta.binhash) .. "' Got: '" .. dlogbinhash .. "'" )
 		return false
 	end
-	
+
 	local dlogstr = util.Decompress( dlogbin )
 	local dlog = util.JSONToTable( dlogstr )
 
@@ -116,7 +116,7 @@ function TREventViewer.ProcessEvents.SaveDamageLog( dlog )
 
 	-- Write the file now.
 	local metastring = util.TableToJSON( metatab )
-	
+
 	logfile:Write( metastring )
 	logfile:Write( "\n" ) -- Newline for easier reading back via file operations.
 	logfile:Write( dlogbin )
@@ -144,7 +144,7 @@ function TREventViewer.ProcessEvents.UpdateDlist( dlist )
 	local vicList = {}
 	local attList = {}
 
-	for i=1, logtab.index - 1 do
+	for i = 1, logtab.index - 1 do
 		local entry = logtab[i]
 		if TREventViewer.FilterEvents.PassesFilter( entry ) then
 			if entry.vic64 and entry.vicnick then
@@ -189,8 +189,8 @@ net.Receive( "TR_TTT_EventLogs", ProcessEventLogs )
 	HOOKS
 --]]
 
-hook.Add("TTTEndRound", "ttt_damagelog_save_hook", function() 
+hook.Add("TTTEndRound", "ttt_damagelog_save_hook", function()
 	if tobool(GetConVar("ttt_damagelogs_autosave"):GetString()) then
-		RunConsoleCommand("ttt_damagelogs_getevents", "AUTOSAVE") 
+		RunConsoleCommand("ttt_damagelogs_getevents", "AUTOSAVE")
 	end
 end )

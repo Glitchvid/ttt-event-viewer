@@ -28,10 +28,10 @@ local function ShowEventWindow()
 	local TC_dark_grey = Color( 90, 90, 90)
 
 	frame:SetPos( (sX / 2) - (sizeX / 2) + 256 , (sY / 2) - (sizeY / 2) )
-	frame:SetSize( sizeX, sizeY ) 
-	frame:SetTitle( "Event Viewer –  Version " .. TREventViewer.VERSION ) 
-	frame:SetVisible( true ) 
-	frame:SetDraggable( false ) 
+	frame:SetSize( sizeX, sizeY )
+	frame:SetTitle( "Event Viewer –  Version " .. TREventViewer.VERSION )
+	frame:SetVisible( true )
+	frame:SetDraggable( false )
 	frame:ShowCloseButton( false )
 	table.insert( paneltab, frame )
 
@@ -49,7 +49,7 @@ local function ShowEventWindow()
 
 	-- DList
 	local dlist = rPan:Add( "DListView" )
-	dlist:SetSize( 1, 1 ) 
+	dlist:SetSize( 1, 1 )
 	dlist:DockMargin( 4, 4, 4, 5 )
 	dlist:Dock( 1 )
 	dlist:SetPos( 8, 32 )
@@ -117,12 +117,12 @@ local function ShowEventWindow()
 
 	local cpframe = vgui.Create( "DFrame" )
 	cpframe:SetSize( 384, sizeY )
-	cpframe:MoveLeftOf( frame, 8 ) 
-	cpframe:MoveBelow( frame, (-1 * sizeY) ) 
-	cpframe:SetTitle( "Controls" ) 
-	cpframe:SetVisible( true ) 
-	cpframe:SetDraggable( false ) 
-	cpframe:ShowCloseButton( true ) 
+	cpframe:MoveLeftOf( frame, 8 )
+	cpframe:MoveBelow( frame, -1 * sizeY )
+	cpframe:SetTitle( "Controls" )
+	cpframe:SetVisible( true )
+	cpframe:SetDraggable( false )
+	cpframe:ShowCloseButton( true )
 	function cpframe:OnClose() CloseAllPanels(paneltab) end
 
 	local tabviews = vgui.Create( "DPropertySheet", cpframe )
@@ -141,9 +141,6 @@ local function ShowEventWindow()
 	local filterPlayers = filtersList:Add( "Filter Players" )
 	filterPlayers:SetContents( filterPlayersPContainer )
 	filterPlayers:SetExpanded( true )
-
-	local textentersize = {128, 22}
-	local textenterpos = {48,14}
 
 	local vicfiltertext = filterPlayersPContainer:Add("DLabel")
 	vicfiltertext:SetText( "Filter Victims" )
@@ -166,7 +163,7 @@ local function ShowEventWindow()
 			vicfilter.olddata = nil
 			vicfilter:SetValue( "Select Player" )
 		end
-		TREventViewer.ProcessEvents.UpdateDlist( dlist )	
+		TREventViewer.ProcessEvents.UpdateDlist( dlist )
 	end
 	function vicfilter:RefreshList()
 		self:Clear()
@@ -203,7 +200,7 @@ local function ShowEventWindow()
 			attfilter.olddata = nil
 			attfilter:SetValue( "Select Player" )
 		end
-		TREventViewer.ProcessEvents.UpdateDlist( dlist )	
+		TREventViewer.ProcessEvents.UpdateDlist( dlist )
 	end
 	function attfilter:RefreshList()
 		self:Clear()
@@ -213,7 +210,7 @@ local function ShowEventWindow()
 			for k, v in pairs(TREventViewer.currentPlayerList.att) do
 				self:AddChoice( v .. " / " .. k, k ) -- Insert name, steam64, with the s64 as a value.
 			end
-		end	
+		end
 		TREventViewer.FilterEvents.Removeatt64Filter( self.olddata )
 		self.olddata = nil
 	end
@@ -222,7 +219,7 @@ local function ShowEventWindow()
 	-- Checkbox Filters
 	local filterEventsPContainer = vgui.Create( "DPanel", filtersPanel)
 	filterEventsPContainer:DockPadding( 8, 8, 8, 8 )
-	
+
 	local eventsFilterCollapsible = filtersList:Add( "Event Types" )
 	eventsFilterCollapsible:SetContents( filterEventsPContainer )
 	eventsFilterCollapsible:SetExpanded( true )
@@ -234,7 +231,7 @@ local function ShowEventWindow()
 	cbeDMG:DockMargin( 2, 0, 0, 2)
 	cbeDMG:SetChecked( true )
 	cbeDMG:SetTextColor( TC_dark_grey )
-	function cbeDMG:OnChange( newVal ) 
+	function cbeDMG:OnChange( newVal )
 		if newVal then
 			TREventViewer.FilterEvents.ShowEvent( "DMG" )
 		else
@@ -250,7 +247,7 @@ local function ShowEventWindow()
 	cbeKILL:DockMargin( 2, 0, 0, 2)
 	cbeKILL:SetChecked( true )
 	cbeKILL:SetTextColor( TC_dark_grey )
-	function cbeKILL:OnChange( newVal ) 
+	function cbeKILL:OnChange( newVal )
 		if newVal then
 			TREventViewer.FilterEvents.ShowEvent( "KILL" )
 		else
@@ -266,7 +263,7 @@ local function ShowEventWindow()
 	cbeDNA:DockMargin( 2, 0, 0, 2)
 	cbeDNA:SetChecked( true )
 	cbeDNA:SetTextColor( TC_dark_grey )
-	function cbeDNA:OnChange( newVal ) 
+	function cbeDNA:OnChange( newVal )
 		if newVal then
 			TREventViewer.FilterEvents.ShowEvent( "DNA" )
 		else
@@ -274,7 +271,7 @@ local function ShowEventWindow()
 		end
 		TREventViewer.ProcessEvents.UpdateDlist( dlist )
 	end
-	
+
 	local cbeBODY = filterEventsPContainer:Add("DCheckBoxLabel")
 	cbeBODY:SetText( "BODY" )
 	cbeBODY:SizeToContents()
@@ -282,7 +279,7 @@ local function ShowEventWindow()
 	cbeBODY:DockMargin( 2, 0, 0, 2)
 	cbeBODY:SetChecked( true )
 	cbeBODY:SetTextColor( TC_dark_grey )
-	function cbeBODY:OnChange( newVal ) 
+	function cbeBODY:OnChange( newVal )
 		if newVal then
 			TREventViewer.FilterEvents.ShowEvent( "BODY" )
 		else
@@ -298,7 +295,7 @@ local function ShowEventWindow()
 	cbeHSDMG:DockMargin( 2, 0, 0, 2)
 	cbeHSDMG:SetChecked( true )
 	cbeHSDMG:SetTextColor( TC_dark_grey )
-	function cbeHSDMG:OnChange( newVal ) 
+	function cbeHSDMG:OnChange( newVal )
 		if newVal then
 			TREventViewer.FilterEvents.ShowEvent( "HSDMG" )
 		else
@@ -329,7 +326,7 @@ local function ShowEventWindow()
 	-- Alerts
 	local ffPContainer = vgui.Create( "DPanel", filtersPanel)
 	ffPContainer:DockPadding( 8, 8, 8, 8 )
-	
+
 	local ffFilterCollapsible = filtersList:Add( "Alerts" )
 	ffFilterCollapsible:SetContents( ffPContainer )
 	ffFilterCollapsible:SetExpanded( true )
@@ -341,7 +338,7 @@ local function ShowEventWindow()
 	cbFF:DockMargin( 2, 0, 0, 2)
 	cbFF:SetChecked( false )
 	cbFF:SetTextColor( TC_dark_grey )
-	function cbFF:OnChange( newVal ) 
+	function cbFF:OnChange( newVal )
 		if newVal == true then
 			TREventViewer.FilterEvents.AddAlertFilter( "FF" )
 		else
@@ -357,7 +354,7 @@ local function ShowEventWindow()
 	cbDF:DockMargin( 2, 0, 0, 2)
 	cbDF:SetChecked( false )
 	cbDF:SetTextColor( TC_dark_grey )
-	function cbDF:OnChange( newVal ) 
+	function cbDF:OnChange( newVal )
 		if newVal == true then
 			TREventViewer.FilterEvents.AddAlertFilter( "DF" )
 		else
@@ -373,7 +370,7 @@ local function ShowEventWindow()
 	cbSU:DockMargin( 2, 0, 0, 2)
 	cbSU:SetChecked( false )
 	cbSU:SetTextColor( TC_dark_grey )
-	function cbSU:OnChange( newVal ) 
+	function cbSU:OnChange( newVal )
 		if newVal == true then
 			TREventViewer.FilterEvents.AddAlertFilter( "SU" )
 		else
@@ -421,7 +418,7 @@ local function ShowEventWindow()
 	metaDataPanel:Dock( TOP )
 	metaDataPanel:DockPadding( 8, 8, 8, 8 )
 	metaDataPanel:SetBackgroundColor( Color(200, 200, 200, 255) )
-	
+
 	function fileBrowser:OnSelect( path, pnl ) -- Called when a file is clicked
 		local meta = TREventViewer.ProcessEvents.LoadDamageLog( path, true )
 
@@ -449,7 +446,7 @@ local function ShowEventWindow()
 		if not metaDataPanel.CurrentPath then
 			return
 		end
-		TREventViewer.ProcessEvents.LoadDamageLog( metaDataPanel.CurrentPath ) 
+		TREventViewer.ProcessEvents.LoadDamageLog( metaDataPanel.CurrentPath )
 		TREventViewer.ProcessEvents.UpdateDlist( dlist )
 		attfilter:RefreshList()
 		vicfilter:RefreshList()
@@ -476,7 +473,7 @@ local function ShowEventWindow()
 	cbAutoSave:DockMargin( 2, 0, 0, 2)
 	cbAutoSave:SetChecked( tobool(GetConVar("ttt_damagelogs_autosave"):GetString()) )
 	cbAutoSave:SetTextColor( TC_dark_grey )
-	function cbAutoSave:OnChange( newVal ) 
+	function cbAutoSave:OnChange( newVal )
 		if newVal then
 			GetConVar("ttt_damagelogs_autosave"):SetBool(true)
 		else

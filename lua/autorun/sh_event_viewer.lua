@@ -18,7 +18,7 @@ local function PD(meta, ... )
 		dlevel = meta[2] or dlevel
 	end
 	if (GetConVar("developer"):GetInt() or 0) >= dlevel then
-		MsgC(Color(255, 222, 102), "(".. prefix .. "): ")
+		MsgC(Color(255, 222, 102), "(" .. prefix .. "): ")
 		MsgC(Color(255, 255, 255), table.concat({...}, "\t") .. "\n")
 	end
 end

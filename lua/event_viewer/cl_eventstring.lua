@@ -89,7 +89,7 @@ local function PadNickLength( nick, len )
 	end
 
 	local padtab = {}
-	for i=1, len - nick:len() do
+	for i = 1, len - nick:len() do
 		padtab[i] = " "
 	end
 	return nick .. table.concat( padtab )
@@ -164,10 +164,8 @@ function TREventViewer.Strings.GenerateAlertString( entry )
 		end
 	end
 
-	if entry.vicrole == "traitor" then
-		if entry.attrole == "traitor" then
-			return "FF"
-		end
+	if entry.vicrole == "traitor" and entry.attrole == "traitor"then
+		return "FF"
 	end
 
 	return ""
