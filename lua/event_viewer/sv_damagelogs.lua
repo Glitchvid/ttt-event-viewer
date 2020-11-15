@@ -13,7 +13,8 @@ local PrintDebug = TREventViewer.PrintDebug
 local PrintDebugNotify = TREventViewer.PrintDebugNotify
 
 local damageLogTab = damageLogTab
-local memoizedLogsCompressed = {dirty = false}
+local cachedLogsCompressed = {dirty = true}
+
 
 -- Session ID
 local function GenerateSessionID()
@@ -32,18 +33,18 @@ local sessionID = GenerateSessionID()
 PrintDebug( "Session ID: " .. sessionID )
 
 
--- Memoized Compressed JSON
-local function SetMemoizedLogs( damageLogTab )
-	memoizedLogsCompressed["logs"] = util.Compress( util.TableToJSON( damageLogTab ) )
-	memoizedLogsCompressed["dirty"] = false
+-- Cached Compressed JSON
+local function SetCachedLogs( damageLogTab )
+	cachedLogsCompressed.logs = util.Compress( util.TableToJSON( damageLogTab ) )
+	cachedLogsCompressed.dirty = false
 end
 
-local function GetMemoizedLogs()
-	if memoizedLogsCompressed["dirty"] then
-		-- This operation is expensive, so we're memoizing it.
-		SetMemoizedLogs( damageLogTab )
+local function GetCachedLogs()
+	if cachedLogsCompressed.dirty then
+		-- This operation is expensive, so we're caching it.
+		SetCachedLogs( damageLogTab )
 	end
-	return memoizedLogsCompressed["logs"]
+	return cachedLogsCompressed.logs
 end
 
 
@@ -59,14 +60,16 @@ local function NewDamageLog()
 	damageLogTab.meta.map = game.GetMap():lower()
 	damageLogTab.meta.session = sessionID
 
-	memoizedLogsCompressed["dirty"] = true
+	cachedLogsCompressed.dirty = true
+	cachedLogsCompressed.logs = nil
 end
 
 NewDamageLog() -- Build initial one.
 
+
 -- Net Library
 local function SendEventsNet( ply, autosave )
-	local logs = GetMemoizedLogs()
+	local logs = GetCachedLogs()
 	net.Start( "TR_TTT_EventLogs" )
 	net.WriteUInt( logs:len(), 16 )
 	net.WriteData( logs, logs:len() )
@@ -136,7 +139,7 @@ local function FoundCorpse( ply, deadply, rag )
  
 	damageLogTab[damageLogTab.index] = entry
 	damageLogTab.index = damageLogTab.index + 1
-	memoizedLogsCompressed["dirty"] = true
+	cachedLogsCompressed.dirty = true
 end
 hook.Add( "TTTBodyFound", "TTTEventViewerBodyFound", FoundCorpse)
 
@@ -186,5 +189,5 @@ function DamageLog( event, vic, att, dmginfo )
  
 	damageLogTab[damageLogTab.index] = entry
 	damageLogTab.index = damageLogTab.index + 1
-	memoizedLogsCompressed["dirty"] = true
+	cachedLogsCompressed.dirty = true
 end
