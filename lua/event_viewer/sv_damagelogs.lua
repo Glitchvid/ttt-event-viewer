@@ -6,6 +6,7 @@
 	Implements new damagelogs system.
 ---------------------------------------------------------------------------]]--
 util.AddNetworkString( "TR_TTT_EventLogs" )
+CreateConVar("ttt_damagelogs_autosave", "false", {FCVAR_ARCHIVE}, "Auto-saves damage logs to SERVER data folder each round.")
 -------------------------------------------------------------------------------
 
 -- Developer Printing Funcionality...
@@ -35,7 +36,9 @@ PrintDebug( "Session ID: " .. sessionID )
 
 -- Cached Compressed JSON
 local function SetCachedLogs( damageLogTab )
-	cachedLogsCompressed.logs = util.Compress( util.TableToJSON( damageLogTab ) )
+	local json = util.TableToJSON( damageLogTab )
+	cachedLogsCompressed.length = json:len()
+	cachedLogsCompressed.logs = util.Compress( json )
 	cachedLogsCompressed.dirty = false
 end
 
@@ -100,6 +103,39 @@ local function SendEvents( ply, cmd, args )
 end
 concommand.Add("ttt_damagelogs_getevents", SendEvents)
 
+-- Derived from the client SaveDamageLog function.
+local function SaveServerDamageLog()
+	local dlog = damageLogTab
+	-- Generate filepaths
+	local datetab = os.date( "*t" , dlog.meta.date )
+	local directory = Format( "ttt/event_viewer/%02d/%02d/%02d", datetab.year, datetab.month, datetab.day )
+	local filepath = directory .. "/" .. Format( "%02d-%02d-%02d", datetab.hour, datetab.min, datetab.sec ) .. ".dat"
+	-- Try creating file
+	file.CreateDir( directory )
+	local logfile = file.Open( filepath  , "wb", "DATA" ) -- Our file handle.
+	if not logfile then
+		PrintDebugNotify( "FAILURE: Cannot open file located at:" )
+		PrintDebugNotify( "-", filepath )
+		return false
+	end
+	-- Preparing binary data
+	local metatab = dlog.meta
+	local dlogbin = GetCachedLogs() -- JSON/Compression already done for us Serverside!
+	metatab.binhash = util.CRC( dlogbin )
+	PrintDebug( "Saving...", "Compressed / Total Size: [ " .. dlogbin:len() .. " / " .. cachedLogsCompressed.length .. " ]", "Hash: " .. metatab.binhash)
+
+	local metastring = util.TableToJSON( metatab )
+	-- Write the file now.
+	logfile:Write( metastring )
+	logfile:Write( "\n" ) -- Newline for easier reading back via file operations.
+	logfile:Write( dlogbin )
+	logfile:Close()
+
+	PrintDebugNotify( "Wrote damagelogs to: " .. filepath )
+	-- Cleanup
+	metatab.binhash = nil
+	return true
+end
 
 --[[
 	HOOKS
@@ -111,8 +147,9 @@ end
 hook.Add( "TTTBeginRound", "TTTBeginNewDamageLogs", BeginNewDamageLogs)
 
 local function HandleDamageLogs()
-	-- TODO!!
-	-- Should probably compile and save them here.
+	if tobool(GetConVar("ttt_damagelogs_autosave"):GetString()) then
+			SaveServerDamageLog()
+	end
 end
 hook.Add( "TTTEndRound", "TTTEndRoundDamageLogs", HandleDamageLogs)
 
