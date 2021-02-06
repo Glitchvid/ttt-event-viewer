@@ -73,6 +73,9 @@ end
 function EventTypeMethods.DNA( entry, outtab )
 	outtab[03] = "retrieved"
 	outtab[04] = outtab[04] .. "'s DNA"
+	if entry.DMGinflictor then
+		outtab[06] = "from a " .. GetInfWepClassString( entry.DMGinflictor )
+	end
 	return outtab
 end
 
