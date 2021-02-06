@@ -19,7 +19,7 @@ local function GetInfWepClassString( infl, wep )
 	if not wep then
 		return cstring or "<SOMETHING>"
 	end
-	return LANG.TryTranslation( wep.PrintName ) .. " / " .. infl
+	return LANG.TryTranslation( wep.PrintName ) .. " / " .. tostring( infl )
 end
 
 local function RoleENUMToString( role )
