@@ -51,7 +51,7 @@ function TREventViewer.ProcessEvents.LoadDamageLog( path, onlymeta )
 	end
 
 	-- Process Metadata
-	meta = ProcessMetaData( logfile )
+	local meta = ProcessMetaData( logfile )
 	if onlymeta then
 		logfile:Close()
 		return meta
