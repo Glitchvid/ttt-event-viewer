@@ -73,11 +73,24 @@ NewDamageLog() -- Build initial one.
 -- Net Library
 local function SendEventsNet( ply, autosave )
 	local logs = GetCachedLogs()
-	net.Start( "TR_TTT_EventLogs" )
-	net.WriteUInt( logs:len(), 16 )
-	net.WriteData( logs, logs:len() )
-	net.WriteBool( autosave )
-	net.Send( ply )
+	-- Chunking.
+	local length = logs:len()
+	local send_size = 32768 -- Bytes.
+	local parts = math.ceil( length / send_size )
+	local start = 0
+	for i = 1, parts do
+		local endbyte = math.min( start + send_size, length )
+		local size = endbyte - start
+		net.Start( "TR_TTT_EventLogs" )
+			net.WriteBool( parts == i ) -- End of Stream?
+			net.WriteUInt( size, 16 )
+			net.WriteData( logs:sub( start + 1, endbyte + 1 ), size )
+			if parts == i then
+				net.WriteBool( autosave )
+			end
+			net.Send( ply )
+		start = endbyte
+	end
 end
 
 

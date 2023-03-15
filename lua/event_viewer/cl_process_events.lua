@@ -170,12 +170,21 @@ function TREventViewer.ProcessEvents.RequestEvents()
 	RunConsoleCommand("ttt_damagelogs_getevents")
 end
 
+local lognetbuff = {}
 local function ProcessEventLogs()
-	local datalength = net.ReadUInt( 16 )
-	local binary = net.ReadData( datalength )
+	local EoS = net.ReadBool()
+	local length = net.ReadUInt( 16 )
+	lognetbuff[#lognetbuff + 1] = net.ReadData( length )
+	PrintDebug( "R Size [ " .. lognetbuff[#lognetbuff]:len() .. " ]" , "EoS: " .. tostring(tobool(EoS)) )
+
+	if not EoS then return end -- More coming down the pipe.
+	local autosave = net.ReadBool()
+
+	local binary = table.concat( lognetbuff )
+	lognetbuff = {} -- flush
+
 	local decompressed = util.Decompress( binary )
 	local dlog =  util.JSONToTable( decompressed )
-	local autosave = net.ReadBool()
 	PrintDebug( "Received events.", "Compressed / Total Size: [ " .. binary:len() .. " / " .. decompressed:len() .. " ]")
 	if autosave then
 		TREventViewer.ProcessEvents.SaveDamageLog( dlog )
