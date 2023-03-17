@@ -98,6 +98,11 @@ end
 function TREventViewer.ProcessEvents.SaveDamageLog( dlog )
 	local dlog = dlog or TREventViewer.currentEvents -- Save the currentEvents log if we aren't passed one.
 
+	if not dlog then
+		PrintDebugNotify( "FAILURE: No damage logs active." ) -- Can happen, actually.
+		return false
+	end
+
 	-- Get and create paths.
 	local datetab = os.date( "*t" , dlog.meta.date )
 	local directory = Format( "ttt/event_viewer/%02d/%02d/%02d", datetab.year, datetab.month, datetab.day )
