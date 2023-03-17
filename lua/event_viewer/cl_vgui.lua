@@ -5,18 +5,74 @@
 --[[---------------------------------PURPOSE-----------------------------------
 	VGUI for Event Viewer.
 ---------------------------------------------------------------------------]]--
+TREventViewer.GUI = {}
 -------------------------------------------------------------------------------
 
 -- Developer Printing Funcionality...
 local PrintDebug = TREventViewer.PrintDebug
 local PrintDebugNotify = TREventViewer.PrintDebugNotify
 
--- Build Filters
+-- VGUI Easy access for later.
+local dlist = dlist
+local vicfilterdlist = {}
+local attfilterdlist = {}
+local currentplayerlist = {}
+
 local function CloseAllPanels( tab )
 	for i = 1, #tab do
 		tab[i]:Close()
 	end
+	-- Clean up.
+	dlist = nil
+	vicfilterdlist = nil
+	attfilterdlist = nil
+	currentplayerlist = {}
 end
+
+--[[---------------------------------------------------------------------------
+	Name: UpdateDlist()
+	Description:	Populates the VGUI DListView with the current Dlog data.
+	Return: 	Nil
+---------------------------------------------------------------------------]]--
+function TREventViewer.GUI.UpdateDlist()
+	local logtab = TREventViewer.currentEvents
+	if not next(logtab) then
+		return
+	end
+	if not dlist then -- No VGUI to update, SKIP!
+		return
+	end
+
+	if #dlist:GetLines() > 0 then
+		dlist:Clear()
+	end
+
+	local vicList = {}
+	local attList = {}
+
+	-- Build our new victim and attacker lists.
+	for i = 1, logtab.index - 1 do
+		local entry = logtab[i]
+		if TREventViewer.FilterEvents.PassesFilter( entry ) then
+			if entry.vic64 and entry.vicnick then
+				vicList[entry.vic64] = entry.vicnick
+			end
+			if entry.att64 and entry.attnick then
+				attList[entry.att64] = entry.attnick
+			end
+			local alerts = TREventViewer.Strings.GenerateAlertString( entry )
+			local line = dlist:AddLine( TREventViewer.Strings.GenerateTimeString(entry.time), entry.event, TREventViewer.Strings.GenerateEntryString( entry ), alerts )
+			-- I want to add color here, but Derma is making it a pain.
+		end
+	end
+	currentplayerlist = {vic = vicList, att = attList}
+	-- Force our dlists to update.
+	if vicfilterdlist and attfilterdlist then
+		vicfilterdlist:RefreshList()
+		attfilterdlist:RefreshList()
+	end
+end
+
 
 
 local function ShowEventWindow()
@@ -48,7 +104,7 @@ local function ShowEventWindow()
 	div:SetLeftWidth( 20 )
 
 	-- DList
-	local dlist = rPan:Add( "DListView" )
+	dlist = rPan:Add( "DListView" )
 	dlist:SetSize( 1, 1 )
 	dlist:DockMargin( 4, 4, 4, 5 )
 	dlist:Dock( 1 )
@@ -71,7 +127,7 @@ local function ShowEventWindow()
 	DIBrefreshDlist:SetStretchToFit( false )
 	DIBrefreshDlist:SetTooltip( "Refresh View" )
 	function DIBrefreshDlist:DoClick()
-		TREventViewer.ProcessEvents.UpdateDlist( dlist )
+		TREventViewer.GUI.UpdateDlist()
 	end
 
 	DIBgetDamageLogs = lPan:Add( "DImageButton" )
@@ -84,7 +140,7 @@ local function ShowEventWindow()
 	DIBgetDamageLogs:SetTooltip( "Get current damagelogs" )
 	function DIBgetDamageLogs:DoClick()
 		TREventViewer.ProcessEvents.RequestEvents( false )
-		TREventViewer.ProcessEvents.UpdateDlist( dlist )
+		TREventViewer.GUI.UpdateDlist()
 	end
 
 	DIBsaveLogs = lPan:Add( "DImageButton" )
@@ -149,35 +205,35 @@ local function ShowEventWindow()
 	vicfiltertext:SizeToContents()
 	vicfiltertext:SetTextColor( TC_dark_grey )
 
-	local vicfilter = filterPlayersPContainer:Add( "DComboBox")
-	vicfilter:SetSize( 196, 22 )
-	vicfilter:Dock( TOP )
-	vicfilter:DockMargin( 0, 0, 0, 4)
-	function vicfilter:OnSelect( index, text, data )
+	vicfilterdlist = filterPlayersPContainer:Add( "DComboBox")
+	vicfilterdlist:SetSize( 196, 22 )
+	vicfilterdlist:Dock( TOP )
+	vicfilterdlist:DockMargin( 0, 0, 0, 4)
+	function vicfilterdlist:OnSelect( index, text, data )
 		if data != -1 then
-			TREventViewer.FilterEvents.Removevic64Filter( vicfilter.olddata )
+			TREventViewer.FilterEvents.Removevic64Filter( vicfilterdlist.olddata )
 			TREventViewer.FilterEvents.Addvic64Filter( data )
-			vicfilter.olddata = data
+			vicfilterdlist.olddata = data
 		else
-			TREventViewer.FilterEvents.Removevic64Filter( vicfilter.olddata )
-			vicfilter.olddata = nil
-			vicfilter:SetValue( "Select Player" )
+			TREventViewer.FilterEvents.Removevic64Filter( vicfilterdlist.olddata )
+			vicfilterdlist.olddata = nil
+			vicfilterdlist:SetValue( "Select Player" )
 		end
-		TREventViewer.ProcessEvents.UpdateDlist( dlist )
+		TREventViewer.GUI.UpdateDlist()
 	end
-	function vicfilter:RefreshList()
+	function vicfilterdlist:RefreshList()
 		self:Clear()
 		self:SetValue( "Select Player" )
 		self:AddChoice( "CLEAR", -1 )
-		if TREventViewer.currentPlayerList.vic then
-			for k, v in pairs(TREventViewer.currentPlayerList.vic) do
+		if currentplayerlist.vic then
+			for k, v in pairs(currentplayerlist.vic) do
 				self:AddChoice( v .. " / " .. k, k ) -- Insert name, steam64, with the s64 as a value.
 			end
 		end
 		TREventViewer.FilterEvents.Removevic64Filter( self.olddata )
 		self.olddata = nil
 	end
-	vicfilter:RefreshList()
+	vicfilterdlist:RefreshList()
 
 	local attfiltertext = filterPlayersPContainer:Add("DLabel")
 	attfiltertext:SetText( "Filter Attackers" )
@@ -186,35 +242,35 @@ local function ShowEventWindow()
 	attfiltertext:SizeToContents()
 	attfiltertext:SetTextColor( Color( 90, 90, 90) )
 
-	local attfilter = filterPlayersPContainer:Add("DComboBox")
-	attfilter:SetSize( 196, 22 )
-	attfilter:Dock( TOP )
-	attfilter:DockMargin( 0, 0, 0, 4)
-	function attfilter:OnSelect( index, text, data )
+	attfilterdlist = filterPlayersPContainer:Add("DComboBox")
+	attfilterdlist:SetSize( 196, 22 )
+	attfilterdlist:Dock( TOP )
+	attfilterdlist:DockMargin( 0, 0, 0, 4)
+	function attfilterdlist:OnSelect( index, text, data )
 		if data != -1 then
-			TREventViewer.FilterEvents.Removeatt64Filter( attfilter.olddata )
+			TREventViewer.FilterEvents.Removeatt64Filter( attfilterdlist.olddata )
 			TREventViewer.FilterEvents.Addatt64Filter( data )
-			attfilter.olddata = data
+			attfilterdlist.olddata = data
 		else
-			TREventViewer.FilterEvents.Removeatt64Filter( attfilter.olddata )
-			attfilter.olddata = nil
-			attfilter:SetValue( "Select Player" )
+			TREventViewer.FilterEvents.Removeatt64Filter( attfilterdlist.olddata )
+			attfilterdlist.olddata = nil
+			attfilterdlist:SetValue( "Select Player" )
 		end
-		TREventViewer.ProcessEvents.UpdateDlist( dlist )
+		TREventViewer.GUI.UpdateDlist()
 	end
-	function attfilter:RefreshList()
+	function attfilterdlist:RefreshList()
 		self:Clear()
 		self:SetValue( "Select Player" )
 		self:AddChoice( "CLEAR", -1 )
-		if TREventViewer.currentPlayerList.att then
-			for k, v in pairs(TREventViewer.currentPlayerList.att) do
+		if currentplayerlist.att then
+			for k, v in pairs(currentplayerlist.att) do
 				self:AddChoice( v .. " / " .. k, k ) -- Insert name, steam64, with the s64 as a value.
 			end
 		end
 		TREventViewer.FilterEvents.Removeatt64Filter( self.olddata )
 		self.olddata = nil
 	end
-	attfilter:RefreshList()
+	attfilterdlist:RefreshList()
 
 	-- Checkbox Filters
 	local filterEventsPContainer = vgui.Create( "DPanel", filtersPanel)
@@ -237,7 +293,7 @@ local function ShowEventWindow()
 		else
 			TREventViewer.FilterEvents.HideEvent( "DMG" )
 		end
-		TREventViewer.ProcessEvents.UpdateDlist( dlist )
+		TREventViewer.GUI.UpdateDlist()
 	end
 
 	local cbeKILL = filterEventsPContainer:Add("DCheckBoxLabel")
@@ -253,7 +309,7 @@ local function ShowEventWindow()
 		else
 			TREventViewer.FilterEvents.HideEvent( "KILL" )
 		end
-		TREventViewer.ProcessEvents.UpdateDlist( dlist )
+		TREventViewer.GUI.UpdateDlist()
 	end
 
 	local cbeDNA = filterEventsPContainer:Add("DCheckBoxLabel")
@@ -269,7 +325,7 @@ local function ShowEventWindow()
 		else
 			TREventViewer.FilterEvents.HideEvent( "DNA" )
 		end
-		TREventViewer.ProcessEvents.UpdateDlist( dlist )
+		TREventViewer.GUI.UpdateDlist()
 	end
 
 	local cbeBODY = filterEventsPContainer:Add("DCheckBoxLabel")
@@ -285,7 +341,7 @@ local function ShowEventWindow()
 		else
 			TREventViewer.FilterEvents.HideEvent( "BODY" )
 		end
-		TREventViewer.ProcessEvents.UpdateDlist( dlist )
+		TREventViewer.GUI.UpdateDlist()
 	end
 
 	local cbeHSDMG = filterEventsPContainer:Add("DCheckBoxLabel")
@@ -301,7 +357,7 @@ local function ShowEventWindow()
 		else
 			TREventViewer.FilterEvents.HideEvent( "HSDMG" )
 		end
-		TREventViewer.ProcessEvents.UpdateDlist( dlist )
+		TREventViewer.GUI.UpdateDlist()
 	end
 
 	--[[
@@ -319,7 +375,7 @@ local function ShowEventWindow()
 			else
 				TREventViewer.FilterEvents.HideEvent( "NADE" )
 			end
-			TREventViewer.ProcessEvents.UpdateDlist( dlist )
+			TREventViewer.GUI.UpdateDlist()
 		end
 	--]]
 
@@ -344,7 +400,7 @@ local function ShowEventWindow()
 		else
 			TREventViewer.FilterEvents.RemoveAlertFilter( "FF" )
 		end
-		TREventViewer.ProcessEvents.UpdateDlist( dlist )
+		TREventViewer.GUI.UpdateDlist()
 	end
 
 	local cbDF = ffPContainer:Add("DCheckBoxLabel")
@@ -360,7 +416,7 @@ local function ShowEventWindow()
 		else
 			TREventViewer.FilterEvents.RemoveAlertFilter( "DF" )
 		end
-		TREventViewer.ProcessEvents.UpdateDlist( dlist )
+		TREventViewer.GUI.UpdateDlist()
 	end
 
 	local cbSU = ffPContainer:Add("DCheckBoxLabel")
@@ -376,7 +432,7 @@ local function ShowEventWindow()
 		else
 			TREventViewer.FilterEvents.RemoveAlertFilter( "SU" )
 		end
-		TREventViewer.ProcessEvents.UpdateDlist( dlist )
+		TREventViewer.GUI.UpdateDlist()
 	end
 
 	local resetFiltersButton = filtersPanel:Add("DButton")
@@ -385,8 +441,8 @@ local function ShowEventWindow()
 	resetFiltersButton:DockMargin( 4, 4, 4, 4)
 	resetFiltersButton:SetText( "RESET FILTERS" )
 	function resetFiltersButton:DoClick()
-		attfilter:RefreshList()
-		vicfilter:RefreshList()
+		attfilterdlist:RefreshList()
+		vicfilterdlist:RefreshList()
 		cbeDMG:SetChecked( true )
 		cbeKILL:SetChecked( true )
 		cbeDNA:SetChecked( true )
@@ -396,7 +452,7 @@ local function ShowEventWindow()
 		cbDF:SetChecked( false )
 		cbSU:SetChecked( false )
 		TREventViewer.FilterEvents.ResetAllFilters()
-		TREventViewer.ProcessEvents.UpdateDlist( dlist )
+		TREventViewer.GUI.UpdateDlist()
 	end
 
 
@@ -447,9 +503,6 @@ local function ShowEventWindow()
 			return
 		end
 		TREventViewer.ProcessEvents.LoadDamageLog( metaDataPanel.CurrentPath )
-		TREventViewer.ProcessEvents.UpdateDlist( dlist )
-		attfilter:RefreshList()
-		vicfilter:RefreshList()
 	end
 
 	-- File Loading UI
@@ -506,7 +559,7 @@ local function ShowEventWindow()
 
 	cpframe:MakePopup()
 	if TREventViewer.currentEvents then
-		TREventViewer.ProcessEvents.UpdateDlist( dlist )
+		TREventViewer.GUI.UpdateDlist()
 	end
 
 

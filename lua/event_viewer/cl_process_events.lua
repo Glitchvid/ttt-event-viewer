@@ -72,15 +72,21 @@ function TREventViewer.ProcessEvents.LoadDamageLog( path, onlymeta )
 	local dlog = util.JSONToTable( dlogstr )
 
 	if not dlog then
-		PrintDebugNotify( "FAILURE: Cannot import log data!" )
+		PrintDebugNotify( "FAILURE: Cannot deserialize log data!" )
 		return false
 	end
 
 	-- Everything looks good, SHIP IT!
 	dlog.meta = meta
-	TREventViewer.currentEvents = dlog
-	PrintDebugNotify( "Successfully loaded events from: " .. path)
-	return true
+
+	if not TREventViewer.SetNewCurrentEvents(dlog) then
+		PrintDebugNotify( "FAILURE: Cannot set current log data!" )
+		return false
+	else
+		PrintDebugNotify( "Successfully loaded events from: " .. path)
+		return true
+	end
+
 end
 
 --[[---------------------------------------------------------------------------
@@ -127,41 +133,6 @@ function TREventViewer.ProcessEvents.SaveDamageLog( dlog )
 end
 
 --[[---------------------------------------------------------------------------
-	Name: UpdateDlist( dlist )
-	Description:	Populates the VGUI DListView with the current Dlog data.
-	Arg 1:		Userdata, Dlist to add the data to.
-	Return: 	Nil
----------------------------------------------------------------------------]]--
-function TREventViewer.ProcessEvents.UpdateDlist( dlist )
-	local logtab = TREventViewer.currentEvents
-	if not next(logtab) then
-		return
-	end
-	if #dlist:GetLines() > 0 then
-		dlist:Clear()
-	end
-
-	local vicList = {}
-	local attList = {}
-
-	for i = 1, logtab.index - 1 do
-		local entry = logtab[i]
-		if TREventViewer.FilterEvents.PassesFilter( entry ) then
-			if entry.vic64 and entry.vicnick then
-				vicList[entry.vic64] = entry.vicnick
-			end
-			if entry.att64 and entry.attnick then
-				attList[entry.att64] = entry.attnick
-			end
-			local alerts = TREventViewer.Strings.GenerateAlertString( entry )
-			local line = dlist:AddLine( TREventViewer.Strings.GenerateTimeString(entry.time), entry.event, TREventViewer.Strings.GenerateEntryString( entry ), alerts )
-			-- I want to add color here, but Derma is making it a pain.
-		end
-	end
-	TREventViewer.currentPlayerList = {vic = vicList, att = attList}
-end
-
---[[---------------------------------------------------------------------------
 	Name: RequestEvents( )
 	Description:	Requests the current events from the server.
 	Return: 	Nil
@@ -190,7 +161,7 @@ local function ProcessEventLogs()
 		TREventViewer.ProcessEvents.SaveDamageLog( dlog )
 		return
 	end
-	TREventViewer.currentEvents = dlog
+	TREventViewer.SetNewCurrentEvents( dlog )
 end
 net.Receive( "TR_TTT_EventLogs", ProcessEventLogs )
 

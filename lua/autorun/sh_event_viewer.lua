@@ -35,7 +35,7 @@ end
 
 
 --[[
-	GLOBAL FUNCTIONS
+	GLOBAL VALUES
 --]]
 
 TREventViewer.PrintDebug = PrintDebug
@@ -45,7 +45,6 @@ if SERVER then
 	-- Neat!
 elseif CLIENT then
 	TREventViewer.currentEvents = {}
-	TREventViewer.currentPlayerList = {}
 end
 
 
@@ -64,6 +63,29 @@ elseif CLIENT then
 	include("event_viewer/cl_filtering.lua")
 	include("event_viewer/cl_process_events.lua")
 	include("event_viewer/cl_vgui.lua")
+end
+
+--[[
+	GLOBAL FUNCTIONS
+--]]
+
+--[[---------------------------------------------------------------------------
+	Name: SetNewCurrentEvents( logtab )
+	Description:	Sets the new current event log being viewed.
+	Arg 1:		Table, The damagelog to save.
+	Return: 	Boolean, false on failure, true otherwise.
+---------------------------------------------------------------------------]]--
+function TREventViewer.SetNewCurrentEvents( logtab )
+	if not logtab or type(logtab) != "table" then -- TODO: real struct validation.
+		error("Tried updating currentEvents with invalid data", 2)
+	end
+
+	TREventViewer.currentEvents = logtab
+
+	if CLIENT then
+		TREventViewer.GUI.UpdateDlist()
+	end
+	return true
 end
 
 PrintDebugNotify("Loaded!")
